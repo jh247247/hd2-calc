@@ -9,31 +9,39 @@ FONT_GENERAL = QtGui.QFont('Serif', 15, QtGui.QFont.Light)
 
 
 class mainWindow(QtGui.QMainWindow):
-    """Main window for the HDCalc application. Should ideally be a skeleton
-    for other modules to be 'plugged in' with minimal change to the code."""
-
+    """
+    Main window for the HDCalc application. Should ideally be a skeleton
+    for other modules to be 'plugged in' with minimal change to the code.
+    """
     def __init__(self):
-        """Initialise basic gui elements. Others can be added later
-        according to the users tastes."""
+        """
+        Initialise basic gui elements. Others can be added later
+        according to the users tastes.
+        """
         super(mainWindow, self).__init__();
         self.__initStatus()
         self.__initWindow()
 
     def __initStatus(self):
-        """The statusbar for the main window is handled by an external class,
+        """
+        The statusbar for the main window is handled by an external class,
         it can be grabbed by other classes to send notfications etc.
 
         The statusbar is used to show messages such as 'Processing', 'Plotting',
-        'Error:' and other messages as seen fit."""
-        self.statusBar = StatusHandler(self.statusBar());
+        'Error:' and other messages as seen fit.
+        """
 
+        self.statusBar = StatusHandler(self.statusBar());
     # DUMMY FOR x86 PLATFORM
     def __initWindow(self):
-        """This code is specifically used to initialise the window for desktop
+        """
+        This code is specifically used to initialise the window for desktop
         platforms, setting it to the same size as the device screen.
 
         This gives an accurate representation of the screen as is would be
-        seen on the device."""
+        seen on the device.
+        """
+
         self.resize(840, 480)
         self.setWindowTitle("Hello, World!")
         self.show()
@@ -45,11 +53,13 @@ class mainWindow(QtGui.QMainWindow):
 
 
 class StatusHandler:
-    """This class handles the status bar of the main window.
+    """
+    This class handles the status bar of the main window.
 
     Main focus is to allow certain messages to be shown for a specified amount
     of time etc. Note that there is no limit to the timeframe for which the
-    message is displayed..."""
+    message is displayed...
+    """
 
     __parentBar = None
     __previousMessage = None
@@ -72,10 +82,12 @@ class StatusHandler:
         self.setMessage(self.DEFAULT_MESSAGE)
 
     def setTempMessage(self, message, time=5):
-        """Displays a message for a specified amount of time in seconds.
+        """
+        Displays a message for a specified amount of time in seconds.
 
         TODO: Might want to add a stack of messages or something to handle
-        multiple messages being added."""
+        multiple messages being added.
+        """
         # save current message
 
         # if timer is running...
@@ -97,10 +109,12 @@ class StatusHandler:
 
 
     def __setPreviousMessage(self):
-        """Restore the previous message to the statusbar if there
+        """
+        Restore the previous message to the statusbar if there
         is nothing on the stack.
 
-        If there is, start a new timer for that message and quit."""
+        If there is, start a new timer for that message and quit.
+        """
 
         # no more messages in the stack
         if len(self.messageStack) == 0:
