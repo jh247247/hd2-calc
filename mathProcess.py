@@ -36,25 +36,26 @@ class mathProcessBase(object):
         """
         pass
 
+    #TODO: modify this to parse multiple lines at a time.
+    # Apparently it isn't wfast enough...
     def clean_output(self, process, queue):
         """
         Whenever the process has data, parse it.
-        Used to have a polling speed of 10Hz, but apparently it doesn't need
-        that at all, a pass will suffice.
+        Apparently you need a poll delay otherwise it eats up CPU cycles like
+        mad.
         """
         while True:
             try:
                 dirty = process.getline()
                 clean = self.parse(dirty)
             except Queue.Empty:
-                pass
-                #time.sleep(0.1) # give up processing time?
+                time.sleep(0.1) # give up processing time?
             except ValueError as inst:
                 print("Error: " + str(inst))
                 pass
             else:
                 if clean != None:
-                    self.cleanOutput.put(clean)
+                    self.cleanOutput.append(clean)
 
 class maximaProcess(mathProcessBase):
     """
@@ -64,7 +65,7 @@ class maximaProcess(mathProcessBase):
 
     __process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
     __parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
-    cleanOutput = Queue.Queue()
+    cleanOutput = []
 
 
     def __init__(self):
@@ -92,11 +93,19 @@ class maximaProcess(mathProcessBase):
         Implement the generic parser for output.
         Apply the regex and check it it spits anything out.
         """
+        # if we get none, return none...
+        if input == None:
+            return None
+
         # split string up into 2 parts, identifier and expression
         out = self.__parseRegex.search(input)
         # this should NEVER HAPPEN!
         # (although it will happen with errors where maxima points out errors..)
         if out == None:
+            # we know that there is something since input isn't None
+            # so concatenate it with data!
+            if len(self.cleanOutput) != 0:
+                self.cleanOutput[len(self.cleanOutput) -1].data += str(input)
             return None
 
         # only has the label type and num, not valid.
@@ -108,11 +117,16 @@ class maximaProcess(mathProcessBase):
     def write(self, input):
         self.__process.write(input)
 
+    def waitForOutput(self):
+        while(len(self.cleanOutput) == 0): time.sleep(0.01)
+
 
 maxima = maximaProcess()
 
 maxima.write(b"integrate(cos(x),x,);\n") # should print an error.
 maxima.write(b"integrate(sin(x),x);\n") # should print -cos(x)
 
-print("Result1: " + str(maxima.cleanOutput.get().data))
-print("Result2: " + str(maxima.cleanOutput.get().data))
+maxima.waitForOutput()
+print("Result1: " + str(maxima.cleanOutput.pop().data))
+maxima.waitForOutput()
+print("Result2: " + str(maxima.cleanOutput.pop().data))
