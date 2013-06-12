@@ -66,7 +66,7 @@ class maximaProcess(mathProcessBase):
 
     __process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
     __parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
-    __texRegex = re.compile("[$$](.*?)[$$]$")
+#    __texRegex = re.compile("[$$]?(.*?)[$$]?$")
     __errorTex = '$$\mathbf{false}$$\n'
     hasDataEvent = threading.Event()
     cleanOutput = []
@@ -84,14 +84,29 @@ class maximaProcess(mathProcessBase):
                                              self.cleanOutput))
         self.thread.daemon = True # thread dies with the program
         self.thread.start()
+        self.texMode = False
 
     def parseTex(self, input):
         if input == self.__errorTex:
             return ''
-        output = self.__texRegex.search(input)
-        if output == None:
+
+        # Dont want no newlines here!
+        input = input.rstrip()
+
+        # if input is invalid ()
+        if input == '':
             return None
-        return input.rstrip()
+
+        if input[0] == '$':
+            self.texMode = True
+        elif input[len(input)-1] == '$':
+            self.texMode = False
+        elif self.texMode == False:
+            return None
+        else:
+            return input
+
+
 
     def parse(self, input):
         """
