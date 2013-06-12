@@ -125,17 +125,23 @@ class maximaProcess(mathProcessBase):
     def getOutput(self):
         return self.cleanOutput
 
+    # testcases...
+def test():
+    maxima = maximaProcess()
 
-maxima = maximaProcess()
+    maxima.write(b"integrate(cos(x),x,);") # should print an error.
+    maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
 
-maxima.write(b"integrate(cos(x),x,);") # should print an error.
-maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
+    while len(maxima.getOutput()) < 2:
+        pass
 
-while len(maxima.getOutput()) < 2:
-    pass
+    # we want to have many test cases later on.
+    # there really should be a better way to do this though.
+    i = 0;
 
-i = 0;
+    for output in maxima.getOutput():
+        i += 1
+        print('Result' + str(i) + ': ' + str(output.data)),
 
-for output in maxima.getOutput():
-    i += 1
-    print('Result' + str(i) + ': ' + str(output.data)),
+if __name__ == '__main__':
+    test()
