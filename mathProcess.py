@@ -106,7 +106,7 @@ class maximaProcess(mathProcessBase):
             # we know that there is something since input isn't None
             # so concatenate it with data!
             if len(self.cleanOutput) != 0:
-                self.cleanOutput[len(self.cleanOutput) -1].data += str(input)
+                self.cleanOutput[len(self.cleanOutput) -1].data += '\n' + input.rstrip('\n')
             return None
 
         outputList = out.groups()
@@ -141,7 +141,8 @@ def test():
 
     for output in maxima.getOutput():
         i += 1
-        print('Result' + str(i) + ': ' + str(output.data)),
+        print('Result' + str(i) + ': ')
+        print(output.data)
 
 if __name__ == '__main__':
     test()
