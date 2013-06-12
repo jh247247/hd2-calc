@@ -10,7 +10,7 @@ class mathElement(object):
     """
     Holder for the data returned by any type of math process.
     """
-    def __init__(self, data, label=None, type=None):
+    def __init__(self, data, label=None, type=None,texOutput=None):
         """
         Constructor for each math element.
         :param data: Compulsory. What data was returned my the math process.
@@ -22,6 +22,7 @@ class mathElement(object):
         self.data = data
         self.label = label
         self.type = type
+        self.texOutput = texOutput
 
 class mathProcessBase(object):
     """
@@ -65,6 +66,8 @@ class maximaProcess(mathProcessBase):
 
     __process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
     __parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
+    __texRegex = re.compile("[$$](.*?)[$$]$")
+    __errorTex = '$$\mathbf{false}$$\n'
     hasDataEvent = threading.Event()
     cleanOutput = []
 
@@ -82,45 +85,60 @@ class maximaProcess(mathProcessBase):
         self.thread.daemon = True # thread dies with the program
         self.thread.start()
 
-    # TODO: make this handle maxima errors (which span more than one line...)
-    # usually something like: (%iN) (ErrorMessage)
-    # (WrongInput)
-    # hat showing where error is.
+    def parseTex(self, input):
+        if input == self.__errorTex:
+            return ''
+        output = self.__texRegex.search(input)
+        if output == None:
+            return None
+        return input.rstrip()
 
-    # (I think we can just get rid of the last 2 lines, just need the error)
-    # Fixed regex: \([%]([oi])([0-9]+)\)\s?(.*?)$
     def parse(self, input):
         """
         Implement the generic parser for output.
         Apply the regex and check it it spits anything out.
         """
+
         # if we get none, return none...
         if input == None:
             return None
 
         # split string up into 2 parts, identifier and expression
         out = self.__parseRegex.search(input)
-        # this should NEVER HAPPEN!
-        # (although it will happen with errors where maxima points out errors..)
+
+        # This will happen on multiline returns.
         if out == None:
+            tex =  self.parseTex(input)
+            if tex != None:
+                self.cleanOutput[len(self.cleanOutput) -1].texOutput = tex
+                return None
+
             # we know that there is something since input isn't None
             # so concatenate it with data!
             if len(self.cleanOutput) != 0:
                 self.cleanOutput[len(self.cleanOutput) -1].data += '\n' + input.rstrip('\n')
             return None
 
+        # allocate memory early so we don't have to worry later.
         outputList = out.groups()
 
         # only has the label type and num, not valid.
-        if len(outputList) == 2:
+        if len(outputList) == 2 or outputList[2] == 'false' or len(outputList[2]) == 0:
             return None
 
+        tex = self.parseTex(outputList[2])
+        if tex != None:
+            self.cleanOutput[len(self.cleanOutput) -1].texOutput = tex
+            return None
 
         return mathElement(outputList[2], outputList[1], outputList[0])
 
     def write(self, input):
         input += '\n' # We don't want to care about the newline when we input
         self.__process.write(input)
+
+        # We also want the tex output.
+        self.__process.write('tex(%);\n')
 
     def getOutput(self):
         return self.cleanOutput
@@ -143,6 +161,7 @@ def test():
         i += 1
         print('Result' + str(i) + ': ')
         print(output.data)
+        print(output.texOutput)
 
 if __name__ == '__main__':
     test()
