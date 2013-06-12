@@ -37,7 +37,7 @@ class mathProcessBase(object):
         pass
 
     #TODO: modify this to parse multiple lines at a time.
-    # Apparently it isn't wfast enough...
+    # Apparently it isn't fast enough...
     def clean_output(self, process, queue):
         """
         Whenever the process has data, parse it.
@@ -49,7 +49,7 @@ class mathProcessBase(object):
                 dirty = process.getline()
                 clean = self.parse(dirty)
             except Queue.Empty:
-                time.sleep(0.1) # give up processing time?
+                process.queueHasData.wait()
             except ValueError as inst:
                 print("Error: " + str(inst))
                 pass
@@ -65,6 +65,7 @@ class maximaProcess(mathProcessBase):
 
     __process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
     __parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
+    hasDataEvent = threading.Event()
     cleanOutput = []
 
 
@@ -108,25 +109,33 @@ class maximaProcess(mathProcessBase):
                 self.cleanOutput[len(self.cleanOutput) -1].data += str(input)
             return None
 
+        outputList = out.groups()
+
         # only has the label type and num, not valid.
-        if len(out.groups()) == 2:
+        if len(outputList) == 2:
             return None
 
-        return mathElement(out.groups()[2], out.groups()[1], out.groups()[0])
+
+        return mathElement(outputList[2], outputList[1], outputList[0])
 
     def write(self, input):
+        input += '\n' # We don't want to care about the newline when we input
         self.__process.write(input)
 
-    def waitForOutput(self):
-        while(len(self.cleanOutput) == 0): time.sleep(0.01)
+    def getOutput(self):
+        return self.cleanOutput
 
 
 maxima = maximaProcess()
 
-maxima.write(b"integrate(cos(x),x,);\n") # should print an error.
-maxima.write(b"integrate(sin(x),x);\n") # should print -cos(x)
+maxima.write(b"integrate(cos(x),x,);") # should print an error.
+maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
 
-maxima.waitForOutput()
-print("Result1: " + str(maxima.cleanOutput.pop().data))
-maxima.waitForOutput()
-print("Result2: " + str(maxima.cleanOutput.pop().data))
+while len(maxima.getOutput()) < 2:
+    pass
+
+i = 0;
+
+for output in maxima.getOutput():
+    i += 1
+    print('Result' + str(i) + ': ' + str(output.data)),
