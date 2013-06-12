@@ -97,10 +97,10 @@ class maximaProcess(mathProcessBase):
         if input == '':
             return None
 
-        if input[0] == '$':
-            self.texMode = True
-        elif input[len(input)-1] == '$':
+        if input[len(input)-1] == '$':
             self.texMode = False
+        elif input[0] == '$':
+            self.texMode = True
         elif self.texMode == False:
             return None
         else:
