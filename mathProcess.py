@@ -94,17 +94,19 @@ class maximaProcess(mathProcessBase):
         input = input.rstrip()
 
         # if input is invalid ()
-        if input == '':
+        if len(input) == 0:
             return None
 
+        # Check tex string end for status
         if input[len(input)-1] == '$':
             self.texMode = False
         elif input[0] == '$':
+            # check tex string start for next line.
             self.texMode = True
         elif self.texMode == False:
             return None
-        else:
-            return input
+
+        return input
 
 
 
