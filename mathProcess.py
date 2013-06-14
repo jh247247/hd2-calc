@@ -133,14 +133,17 @@ class maximaProcess(mathProcessBase):
             # we know that there is something since input isn't None
             # so concatenate it with data!
             if len(self.cleanOutput) != 0:
-                self.cleanOutput[len(self.cleanOutput) -1].data += '\n' + input.rstrip('\n')
+                self.cleanOutput[len(self.cleanOutput) -1].data += (
+                    '\n' + input.rstrip('\n'))
             return None
 
         # allocate memory early so we don't have to worry later.
         outputList = out.groups()
 
         # only has the label type and num, not valid.
-        if len(outputList) == 2 or outputList[2] == 'false' or len(outputList[2]) == 0:
+        if (len(outputList) == 2 or
+            outputList[2] == 'false' or
+            len(outputList[2]) == 0):
             return None
 
         tex = self.parseTex(outputList[2])
