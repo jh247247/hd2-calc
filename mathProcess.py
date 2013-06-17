@@ -10,7 +10,7 @@ class mathElement(object):
     """
     Holder for the data returned by any type of math process.
     """
-    def __init__(self, data, label=None, type=None,texOutput=None):
+    def __init__(self, data, label=None, type=None, texOutput=None):
         """
         Constructor for each math element.
         :param data: Compulsory. What data was returned my the math process.
@@ -18,11 +18,22 @@ class mathElement(object):
                       of outpout the REPL says it is.
         :param type: Optional. What type of data this contains; input, output or
                      something else.
+        :param texOutput: Tex representaion of data for rendering later.
         """
         self.data = data
         self.label = label
         self.type = type
         self.texOutput = texOutput
+
+    def __str__(self):
+        """
+        Return a string in the same format as was given by
+        """
+        return ("Type: " + str(self.type) + "\n"
+                "Label: " +str(self.label) + "\n" +
+                "Data: " + str(self.data) + "\n" +
+                "Tex: " + str(self.texOutput) + "\n")
+
 
 class mathProcessBase(object):
     """
@@ -71,9 +82,10 @@ class maximaProcess(mathProcessBase):
     # Put potential errors that the tex parser can return here.
     __errorTex = ['$$\mathbf{false}$$\n']
 
-    hasDataEvent = threading.Event()
-    cleanOutput = []
+    # block while parsing output
+    texMode = False
 
+    cleanOutput = []
 
     def __init__(self):
         """
@@ -87,9 +99,8 @@ class maximaProcess(mathProcessBase):
                                              self.cleanOutput))
         self.thread.daemon = True # thread dies with the program
         self.thread.start()
-        self.texMode = False
 
-    def parseTex(self, input):
+    def __parseTex(self, input):
         if input in self.__errorTex:
             return ''
 
@@ -101,7 +112,7 @@ class maximaProcess(mathProcessBase):
             return None
 
         # Check tex string end for status
-        if input[len(input)-1] == '$':
+        if input[-1] == '$':
             self.texMode = False
         elif input[0] == '$':
             # check tex string start for next line.
@@ -111,12 +122,46 @@ class maximaProcess(mathProcessBase):
 
         return input
 
+    def __parseRegexFail(self, input):
+        """
+        If regex for parsing falis, give it here and check whether or not it
+        falls into any other categories.
+        """
+        # Output is tex. Need to add it to the end of the tex part.
+        tex =  self.__parseTex(input)
+        if self.__texAppend(input) == True:
+            # If success, quit.
+            return
+
+        # we know that there is something since input isn't None
+        # so concatenate it with data!
+        if len(self.cleanOutput) != 0:
+            self.cleanOutput[-1].data += '\n' + input.rstrip('\n')
+            return
+
+    def __texAppend(self, input):
+        """
+        This is only ever called to set the previous output.
+        Appends the tex string given or creates it if it is None.
+        """
+        if input == None or len(self.cleanOutput) == 0:
+            return False
+
+        if self.cleanOutput[-1].texOutput == None:
+            self.cleanOutput[-1].texOutput = input
+        else:
+            self.cleanOutput[-1].texOutput += input
+
+        return True
 
 
     def parse(self, input):
         """
         Implement the generic parser for output.
         Apply the regex and check it it spits anything out.
+        If the parser doesn't spit anything out, test if it is tex output.
+        If it is, add it to the tex field.
+        If it isn't pass it onto another function for it to handle.
         """
 
         # if we get none, return none...
@@ -128,16 +173,7 @@ class maximaProcess(mathProcessBase):
 
         # This will happen on multiline returns.
         if out == None:
-            tex =  self.parseTex(input)
-            if tex != None:
-                self.cleanOutput[len(self.cleanOutput) -1].texOutput = tex
-                return None
-
-            # we know that there is something since input isn't None
-            # so concatenate it with data!
-            if len(self.cleanOutput) != 0:
-                self.cleanOutput[len(self.cleanOutput) -1].data += (
-                    '\n' + input.rstrip('\n'))
+            self.__parseRegexFail(input)
             return None
 
         # allocate memory early so we don't have to worry later.
@@ -149,9 +185,11 @@ class maximaProcess(mathProcessBase):
             len(outputList[2]) == 0):
             return None
 
-        tex = self.parseTex(outputList[2])
-        if tex != None:
-            self.cleanOutput[len(self.cleanOutput) -1].texOutput = tex
+        # wait a sec, this output looks like TEX!
+        # If it gets here, it means that this is the first line of tex output.
+        # So instead of adding, set the tex variable to this.
+        tex = self.__parseTex(outputList[2])
+        if self.__texAppend(tex) == True:
             return None
 
         return mathElement(outputList[2], outputList[1], outputList[0])
@@ -164,17 +202,23 @@ class maximaProcess(mathProcessBase):
         self.__process.write('tex(%);\n')
 
     def getOutput(self):
+        while self.texMode != False:
+            time.sleep(0.1)
         return self.cleanOutput
 
     # testcases...
 def test():
     maxima = maximaProcess()
 
-    maxima.write(b"integrate(cos(x),x,);") # should print an error.
-    maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
+    # maxima.write(b"integrate(cos(x),x,);") # should print an error.
+    # maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
+
+    maxima.write(b"diff(f(t),t,2);") # should print an error.
+    maxima.write(b"laplace(%o2,t,s);") # should print an error.
 
     while len(maxima.getOutput()) < 2:
         pass
+
 
     # we want to have many test cases later on.
     # there really should be a better way to do this though.
@@ -182,9 +226,7 @@ def test():
 
     for output in maxima.getOutput():
         i += 1
-        print('Result' + str(i) + ': ')
-        print(output.data)
-        print(output.texOutput)
+        print('***** Result' + str(i) + ' *****\n' + str(output))
 
 if __name__ == '__main__':
     test()
