@@ -75,23 +75,16 @@ class maximaProcess(mathProcessBase):
     Needs some work, such as multiline responses and some error messages.
     """
 
-    __process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
-    __parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
-    #__texRegex = re.compile("[$$]?(.*?)[$$]?$")
-
-    # Put potential errors that the tex parser can return here.
-    __errorTex = ['$$\mathbf{false}$$\n']
-
-    # block while parsing output
-    texMode = False
-
-    cleanOutput = []
 
     def __init__(self):
         """
         Start up the maxima subProcess using nonBlockingSubprocess.
         Set some sane defaults so it wil be easy to parse later on.
         """
+        self.__process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
+
+        self.cleanOutput = []
+
         # make things easier to parse.
         self.__process.write("display2d: false$")
         self.thread = threading.Thread(target=self.clean_output,
@@ -100,7 +93,20 @@ class maximaProcess(mathProcessBase):
         self.thread.daemon = True # thread dies with the program
         self.thread.start()
 
+        self.__parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
+
+        # Put potential errors that the tex parser can return here.
+        self.__errorTex = ['$$\mathbf{false}$$\n']
+
+        # block while parsing output
+        self.texMode = False
+
+        self.parseDone = threading.Event()
+
+
+
     def __parseTex(self, input):
+
         if input in self.__errorTex:
             return ''
 
@@ -112,12 +118,15 @@ class maximaProcess(mathProcessBase):
             return None
 
         # Check tex string end for status
-        if input[-1] == '$':
+        if input[-1] == '$' and input[0] != '$':
             self.texMode = False
-        elif input[0] == '$':
+            self.parseDone.set();
+        elif input[0] == '$' and input[-1] != '$':
             # check tex string start for next line.
             self.texMode = True
-        elif self.texMode == False:
+        elif input[0] == '$' and input[-1] == '$':
+            self.parseDone.set()
+        elif self.texMode == False and input[0] != '$' and input[-1] != '$':
             return None
 
         return input
@@ -202,8 +211,11 @@ class maximaProcess(mathProcessBase):
         self.__process.write('tex(%);\n')
 
     def getOutput(self):
-        while self.texMode != False:
-            time.sleep(0.1)
+        self.parseDone.wait()
+        # Quick hack to make sure the last element is fully defined.
+        if self.cleanOutput[-1].texOutput == None:
+            time.sleep(0.01); # kind of need a delay for more things to happen
+            return self.getOutput()
         return self.cleanOutput
 
     # testcases...
