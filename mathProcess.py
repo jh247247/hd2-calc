@@ -214,7 +214,10 @@ class maximaProcess(mathProcessBase):
         self.parseDone.wait()
         # Quick hack to make sure the last element is fully defined.
         if self.cleanOutput[-1].texOutput == None:
-            time.sleep(0.01); # kind of need a delay for more things to happen
+            while self.cleanOutput[-1].texOutput == None:
+                pass
+            while self.texMode == True:
+                pass
             return self.getOutput()
         return self.cleanOutput
 
