@@ -10,7 +10,7 @@ class mathElement(object):
     """
     Holder for the data returned by any type of math process.
     """
-    def __init__(self, data, label=None, type=None, texOutput=None):
+    def __init__(self, data=None, label=None, type=None, texOutput=None):
         """
         Constructor for each math element.
         :param data: Compulsory. What data was returned my the math process.
@@ -24,6 +24,15 @@ class mathElement(object):
         self.label = label
         self.type = type
         self.texOutput = texOutput
+
+    def defined(self):
+        if (self.data != None and
+            self.label != None and
+            self.type != None and
+            self.texOutput != None):
+            return True
+        else:
+            return False
 
     def __str__(self):
         """
@@ -93,76 +102,73 @@ class maximaProcess(mathProcessBase):
         self.thread.daemon = True # thread dies with the program
         self.thread.start()
 
-        self.__parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s?(.*?)$")
+        #self.__parseRegex = re.compile("\([%]([oi])([0-9]+)\)\s(.*?)$")
 
         # Put potential errors that the tex parser can return here.
         self.__errorTex = ['$$\mathbf{false}$$\n']
 
-        # block while parsing output
+        # this variable will be set to true when tex mode is being parsed.
         self.texMode = False
+        # This is the element being currently worked on.
+        self.inProgress = mathElement()
 
-        self.parseDone = threading.Event()
 
+    def __identParse(self, input):
+        if input == None:
+            return None
 
+        # Oh wow, the data we are searching for has already been input.
+        if self.inProgress.label != None and self.inProgress.type != None:
+            # Search for a closing bracket, if we find one, return substring
+            # after bracket.
+            i = 0
+            while i < len(input):
+                if input[i] == ')':
+                    return input[i+1:].strip(' \n')
+                i += 1
 
-    def __parseTex(self, input):
+            # No closing bracket found...
+            return input
 
+        # Split string into two parts, the one we are interested in,
+        # The other bits that we dont care about right now.
+        i = 0
+        while i < len(input):
+            if input[i] == ')':
+                output = input[i+1:].strip(' \n')
+                input = input[1:i]
+                break
+            i += 1
+
+        # Strip the input of what parts we want to keep.
+        # Type of return, input or output.
+        # Might be useful later.
+        self.inProgress.type = input[1]
+
+        # Convert the rest of the string to an integer, because that's what it
+        # is. Makes things easier later on.
+        self.inProgress.label = int(input[2:])
+
+        return output
+    def __texParse(self, input):
+        # If input is a known error, tex output is nothing.
         if input in self.__errorTex:
-            return ''
-
-        # Dont want no newlines here!
-        input = input.rstrip()
-
-        # if input is invalid ()
-        if len(input) == 0:
-            return None
-
-        # Check tex string end for status
-        if input[-1] == '$' and input[0] != '$':
             self.texMode = False
-            self.parseDone.set();
-        elif input[0] == '$' and input[-1] != '$':
-            # check tex string start for next line.
+            self.inProgress.texOutput = ''
+
+        # Check for tex identifiers. Set texMode to appropriate value.
+        if input[0] == '$' and input[-1] == '$':
+            pass
+        elif input[0] == '$':
             self.texMode = True
-        elif input[0] == '$' and input[-1] == '$':
-            self.parseDone.set()
-        elif self.texMode == False and input[0] != '$' and input[-1] != '$':
-            return None
+        elif input[-1] == '$':
+            self.texMode = False
 
-        return input
-
-    def __parseRegexFail(self, input):
-        """
-        If regex for parsing falis, give it here and check whether or not it
-        falls into any other categories.
-        """
-        # Output is tex. Need to add it to the end of the tex part.
-        tex =  self.__parseTex(input)
-        if self.__texAppend(input) == True:
-            # If success, quit.
-            return
-
-        # we know that there is something since input isn't None
-        # so concatenate it with data!
-        if len(self.cleanOutput) != 0:
-            self.cleanOutput[-1].data += '\n' + input.rstrip('\n')
-            return
-
-    def __texAppend(self, input):
-        """
-        This is only ever called to set the previous output.
-        Appends the tex string given or creates it if it is None.
-        """
-        if input == None or len(self.cleanOutput) == 0:
-            return False
-
-        if self.cleanOutput[-1].texOutput == None:
-            self.cleanOutput[-1].texOutput = input
+        # Append input string to end of texOutput.
+        if self.inProgress.texOutput == None:
+            self.inProgress.texOutput = input
         else:
-            self.cleanOutput[-1].texOutput += input
-
-        return True
-
+            self.inProgress.texOutput += input
 
     def parse(self, input):
         """
@@ -173,35 +179,36 @@ class maximaProcess(mathProcessBase):
         If it isn't pass it onto another function for it to handle.
         """
 
-        # if we get none, return none...
+        if self.texMode == False and self.inProgress.defined():
+            tempElement = self.inProgress
+            self.inProgress = mathElement()
+            return tempElement
+
         if input == None:
             return None
 
-        # split string up into 2 parts, identifier and expression
-        out = self.__parseRegex.search(input)
-
-        # This will happen on multiline returns.
-        if out == None:
-            self.__parseRegexFail(input)
+        input = input.strip(' \n')
+        if len(input) == 0:
             return None
 
-        # allocate memory early so we don't have to worry later.
-        outputList = out.groups()
+        # parse identifier
+        if input[0] == '(':
+            input = self.__identParse(input)
+            if len(input) == 0:
+                return None
 
-        # only has the label type and num, not valid.
-        if (len(outputList) == 2 or
-            outputList[2] == 'false' or
-            len(outputList[2]) == 0):
+        # Check for tex input.
+
+        if input[0] == '$' or self.texMode == True:
+            self.__texParse(input)
             return None
 
-        # wait a sec, this output looks like TEX!
-        # If it gets here, it means that this is the first line of tex output.
-        # So instead of adding, set the tex variable to this.
-        tex = self.__parseTex(outputList[2])
-        if self.__texAppend(tex) == True:
-            return None
+        if self.inProgress.data == None:
+            self.inProgress.data = input
+        else:
+            self.inProgress.data += input
 
-        return mathElement(outputList[2], outputList[1], outputList[0])
+        return None
 
     def write(self, input):
         input += '\n' # We don't want to care about the newline when we input
@@ -211,20 +218,12 @@ class maximaProcess(mathProcessBase):
         self.__process.write('tex(%);\n')
 
     def getOutput(self):
-        self.parseDone.wait()
-        # Quick hack to make sure the last element is fully defined.
-        if self.cleanOutput[-1].texOutput == None:
-            while self.cleanOutput[-1].texOutput == None:
-                pass
-            while self.texMode == True:
-                pass
-            return self.getOutput()
         return self.cleanOutput
 
     # testcases...
 def test():
-    maxima = maximaProcess()
 
+    maxima = maximaProcess()
     # maxima.write(b"integrate(cos(x),x,);") # should print an error.
     # maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
 
