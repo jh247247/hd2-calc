@@ -1,5 +1,5 @@
 import sys
-from PySide import QtGui
+from PySide import QtGui, QtCore
 from threading import Timer
 
 # Setup fonts to use (Since this is a high DPI device)
@@ -21,6 +21,10 @@ class mainWindow(QtGui.QMainWindow):
         super(mainWindow, self).__init__();
         self.__initStatus()
         self.__initWindow()
+
+        self.elements = ElementHandler(self)
+
+        self.setCentralWidget(self.elements)
 
     def __initStatus(self):
         """
@@ -106,8 +110,6 @@ class StatusHandler:
             self.timer = Timer(time, self.__setPreviousMessage)
             self.timer.start()
 
-
-
     def __setPreviousMessage(self):
         """
         Restore the previous message to the statusbar if there
@@ -135,6 +137,75 @@ class StatusHandler:
 
 
 # Everything has to start somewhere. This app starts here.
+
+class ElementHandler(QtGui.QWidget):
+    def __init__(self, parent=None):
+        super(ElementHandler,self).__init__()
+        self.elements = []
+
+        self.elementLayout = QtGui.QVBoxLayout(self)
+
+        self.appendElement()
+
+    def appendElement(self):
+        newElement = guiMathElement(self)
+        self.elementLayout.addWidget(newElement)
+        self.elements.append(newElement)
+
+
+
+class guiMathElement(QtGui.QWidget):
+    def __init__(self, parent=None):
+        super(guiMathElement,self).__init__(parent)
+        self.__initChildren()
+        self.__initAnimation()
+
+        self.setMaximumHeight(100)
+
+    def __initChildren(self):
+        self.text = QtGui.QTextEdit()
+        self.goRenderButton = QtGui.QPushButton(">>")
+        self.goRenderButton.clicked.connect(self.__slideLeft)
+
+        self.layout = QtGui.QHBoxLayout(self)
+        self.layout.addWidget(self.text)
+        self.layout.addWidget(self.goRenderButton)
+        self.setLayout(self.layout)
+
+    def __initAnimation(self):
+        self.slideLeftAnim = QtCore.QPropertyAnimation(self, "geometry")
+        self.slideRightAnim = QtCore.QPropertyAnimation(self, "geometry")
+
+        self.slideLeftAnim.setDuration(250)
+        self.slideRightAnim.setDuration(250)
+
+        self.slideRightAnim.setEasingCurve(QtCore.QEasingCurve.OutQuad)
+
+        self.slideRightAnim.setEasingCurve(QtCore.QEasingCurve.OutQuad)
+
+    def __slideLeft(self):
+        w = self.width()
+        h = self.height()
+
+        x = self.x()
+        y = self.y()
+
+        self.slideLeftAnim.setStartValue(QtCore.QRect(x,y,x+w,y+h))
+        self.slideLeftAnim.setEndValue(QtCore.QRect(x-w,y,x+w,y+h))
+        self.slideLeftAnim.start()
+
+    def __slideRight(self):
+        w = self.width()
+        h = self.height()
+
+        x = self.x()
+        y = self.y()
+
+        self.slideRightAnim.setStartValue(QtCore.QRect(x,y,x+w,y+h))
+        self.slideRightAnim.setEndValue(QtCore.QRect(x+w,y,x+w+w,y+h))
+
+        self.slideRightAnim.start()
+
 def main():
     app = QtGui.QApplication(sys.argv)
     main = mainWindow()
