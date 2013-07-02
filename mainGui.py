@@ -1,12 +1,12 @@
 import sys
-from PySide import QtGui, QtCore
+from PySide import *
 from threading import Timer
 
 # Setup fonts to use (Since this is a high DPI device)
 # Can be changed to suit tastes I guess...
 FONT_STATUS = QtGui.QFont('Serif', 15, QtGui.QFont.Light)
 FONT_GENERAL = QtGui.QFont('Serif', 15, QtGui.QFont.Light)
-
+FONT_GENERAL_METRICS = QtGui.QFontMetrics(FONT_GENERAL)
 
 class mainWindow(QtGui.QMainWindow):
     """
@@ -24,7 +24,14 @@ class mainWindow(QtGui.QMainWindow):
 
         self.elements = ElementHandler(self)
 
-        self.setCentralWidget(self.elements)
+        self.scroll = QtGui.QScrollArea(self)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setStyleSheet("QScrollBar:vertical { width: 30px; }")
+        self.scroll.setWidget(self.elements)
+        self.scroll.setWidgetResizable(True)
+
+        self.setCentralWidget(self.scroll)
 
     def __initStatus(self):
         """
@@ -144,12 +151,16 @@ class ElementHandler(QtGui.QWidget):
         self.elements = []
 
         self.elementLayout = QtGui.QVBoxLayout(self)
+        self.setLayout(self.elementLayout)
+        self.elementLayout.setAlignment(QtCore.Qt.AlignBottom)
 
         self.appendElement()
+
 
     def appendElement(self):
         newElement = guiMathElement(self)
         self.elementLayout.addWidget(newElement)
+        newElement.setFixedWidth(self.width()-55)
         self.elements.append(newElement)
 
 
@@ -159,13 +170,25 @@ class guiMathElement(QtGui.QWidget):
         super(guiMathElement,self).__init__(parent)
         self.__initChildren()
         self.__initAnimation()
+        self.setSizePolicy(QtGui.QSizePolicy.Expanding, \
+                           QtGui.QSizePolicy.Expanding)
+        self.setFixedWidth(parent.width())
 
-        self.setMaximumHeight(100)
+        print FONT_GENERAL_METRICS.height()
 
     def __initChildren(self):
         self.text = QtGui.QTextEdit()
+        # Magic number comes from added gui elements and text.
+        self.text.setFixedHeight(FONT_GENERAL_METRICS.height()+19)
+        self.text.textChanged.connect(self.__textChanged)
+        self.text.setSizePolicy(QtGui.QSizePolicy.Expanding, \
+                                QtGui.QSizePolicy.Fixed)
+
         self.goRenderButton = QtGui.QPushButton(">>")
         self.goRenderButton.clicked.connect(self.__slideLeft)
+        self.goRenderButton.setMinimumHeight(self.height())
+        self.goRenderButton.setSizePolicy(QtGui.QSizePolicy.Fixed, \
+                                          QtGui.QSizePolicy.Expanding)
 
         self.layout = QtGui.QHBoxLayout(self)
         self.layout.addWidget(self.text)
@@ -194,6 +217,7 @@ class guiMathElement(QtGui.QWidget):
         self.slideLeftAnim.setEndValue(QtCore.QRect(x-w,y,x+w,y+h))
         self.slideLeftAnim.start()
 
+
     def __slideRight(self):
         w = self.width()
         h = self.height()
@@ -206,8 +230,16 @@ class guiMathElement(QtGui.QWidget):
 
         self.slideRightAnim.start()
 
+    def __textChanged(self):
+        h = self.text.document().size().height()+5
+        self.text.setFixedHeight(h)
+
+    def resizeEvent(self,event):
+        super(guiMathElement,self).resizeEvent(event)
+
 def main():
     app = QtGui.QApplication(sys.argv)
+    app.setFont(FONT_GENERAL)
     main = mainWindow()
     main.getStatusObject().setTempMessage('Hello1!');
     main.getStatusObject().setTempMessage('Hello2!');
