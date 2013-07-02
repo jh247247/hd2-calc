@@ -166,6 +166,7 @@ class ElementHandler(QtGui.QWidget):
 
 
 class guiMathElement(QtGui.QWidget):
+    INITIAL_HEIGHT = 100
     def __init__(self, parent=None):
         super(guiMathElement,self).__init__(parent)
         self.__initChildren()
@@ -177,16 +178,17 @@ class guiMathElement(QtGui.QWidget):
         print FONT_GENERAL_METRICS.height()
 
     def __initChildren(self):
+        self.setMaximumHeight(self.INITIAL_HEIGHT)
         self.text = QtGui.QTextEdit()
         # Magic number comes from added gui elements and text.
-        self.text.setFixedHeight(FONT_GENERAL_METRICS.height()+19)
+        self.text.setFixedHeight(self.INITIAL_HEIGHT)
         self.text.textChanged.connect(self.__textChanged)
         self.text.setSizePolicy(QtGui.QSizePolicy.Expanding, \
                                 QtGui.QSizePolicy.Fixed)
 
         self.goRenderButton = QtGui.QPushButton(">>")
         self.goRenderButton.clicked.connect(self.__slideLeft)
-        self.goRenderButton.setMinimumHeight(self.height())
+        self.goRenderButton.setMaximumHeight(self.INITIAL_HEIGHT)
         self.goRenderButton.setSizePolicy(QtGui.QSizePolicy.Fixed, \
                                           QtGui.QSizePolicy.Expanding)
 
@@ -232,7 +234,8 @@ class guiMathElement(QtGui.QWidget):
 
     def __textChanged(self):
         h = self.text.document().size().height()+5
-        self.text.setFixedHeight(h)
+        if h > self.INITIAL_HEIGHT:
+            self.setFixedHeight(h)
 
     def resizeEvent(self,event):
         super(guiMathElement,self).resizeEvent(event)
