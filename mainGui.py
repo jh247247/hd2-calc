@@ -8,6 +8,9 @@ FONT_STATUS = QtGui.QFont('Serif', 15, QtGui.QFont.Light)
 FONT_GENERAL = QtGui.QFont('Serif', 15, QtGui.QFont.Light)
 FONT_GENERAL_METRICS = QtGui.QFontMetrics(FONT_GENERAL)
 
+SCROLLBAR_WIDTH = 30 # width of vertical scrollbar in pixels.
+# this is for touchscreen interfaces.
+
 class mainWindow(QtGui.QMainWindow):
     """
     Main window for the HDCalc application. Should ideally be a skeleton
@@ -25,9 +28,15 @@ class mainWindow(QtGui.QMainWindow):
         self.elements = ElementHandler(self)
 
         self.scroll = QtGui.QScrollArea(self)
+        # We want things to always show, makes size calculations easier.
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.scroll.setStyleSheet("QScrollBar:vertical { width: 30px; }")
+
+        # This is some stylesheet hackery to get things how I want it,
+        # Apparently We cant just go
+        # self.scroll.verticalScrollBar().setFixedWidth(SCROLLBAR_WIDTH)
+        # Oh well. This works as well.
+        self.scroll.setStyleSheet("QScrollBar:vertical { width: " + \
+                                  str(SCROLLBAR_WIDTH) + "px; }")
         self.scroll.setWidget(self.elements)
         self.scroll.setWidgetResizable(True)
 
@@ -89,7 +98,7 @@ class StatusHandler:
         self.__parentBar.showMessage(message);
 
     def clearMessage(self):
-        """Clear the mssage back to the default message"""
+        """Clear the message back to the default message"""
         self.setMessage(self.DEFAULT_MESSAGE)
 
     def setTempMessage(self, message, time=5):
@@ -129,6 +138,7 @@ class StatusHandler:
         if len(self.messageStack) == 0:
             # Sweet! We can go back to out previous message!
             self.setMessage(self.__previousMessage);
+            self.timer = None
         else:
             # still have a message in the stack!
             [newMessage, newTime] = self.messageStack.pop();
@@ -142,7 +152,6 @@ class StatusHandler:
         # however, it isn't fatal, so it doesn't matter right now.
         self.__parentBar.repaint()
 
-
 # Everything has to start somewhere. This app starts here.
 
 class ElementHandler(QtGui.QWidget):
@@ -155,13 +164,46 @@ class ElementHandler(QtGui.QWidget):
         self.elementLayout.setAlignment(QtCore.Qt.AlignBottom)
 
         self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+        self.appendElement()
+
 
 
     def appendElement(self):
         newElement = guiMathElement(self)
         self.elementLayout.addWidget(newElement)
-        newElement.setFixedWidth(self.width()-55)
         self.elements.append(newElement)
+
+    def resizeEvent(self,event):
+        super(ElementHandler, self).resizeEvent(event)
+
+        self.resize(event.size())
+        for i in self.elements:
+            i.setFixedWidth(self.width()-SCROLLBAR_WIDTH)
+
+        # Have to do this to redraw the layout.
+        self.elementLayout.activate()
 
 
 
@@ -171,11 +213,8 @@ class guiMathElement(QtGui.QWidget):
         super(guiMathElement,self).__init__(parent)
         self.__initChildren()
         self.__initAnimation()
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, \
-                           QtGui.QSizePolicy.Expanding)
-        self.setFixedWidth(parent.width())
 
-        print FONT_GENERAL_METRICS.height()
+
 
     def __initChildren(self):
         self.setMaximumHeight(self.INITIAL_HEIGHT)
@@ -233,12 +272,12 @@ class guiMathElement(QtGui.QWidget):
         self.slideRightAnim.start()
 
     def __textChanged(self):
-        h = self.text.document().size().height()+5
-        if h > self.INITIAL_HEIGHT:
-            self.setFixedHeight(h)
+        self.text.ensureCursorVisible()
+
 
     def resizeEvent(self,event):
         super(guiMathElement,self).resizeEvent(event)
+
 
 def main():
     app = QtGui.QApplication(sys.argv)
