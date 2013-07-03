@@ -34,7 +34,7 @@ class mainWindow(QtGui.QMainWindow):
         # This is some stylesheet hackery to get things how I want it,
         # Apparently We cant just go
         # self.scroll.verticalScrollBar().setFixedWidth(SCROLLBAR_WIDTH)
-        # Oh well. This works as well.
+        # Oh well. This works.
         self.scroll.setStyleSheet("QScrollBar:vertical { width: " + \
                                   str(SCROLLBAR_WIDTH) + "px; }")
         self.scroll.setWidget(self.elements)
@@ -154,7 +154,7 @@ class StatusHandler:
 
 # Everything has to start somewhere. This app starts here.
 
-class ElementHandler(QtGui.QWidget):
+class ElementHandler(QtGui.QScrollArea):
     def __init__(self, parent=None):
         super(ElementHandler,self).__init__()
         self.elements = []
@@ -164,31 +164,6 @@ class ElementHandler(QtGui.QWidget):
         self.elementLayout.setAlignment(QtCore.Qt.AlignBottom)
 
         self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-        self.appendElement()
-
-
 
     def appendElement(self):
         newElement = guiMathElement(self)
@@ -208,7 +183,7 @@ class ElementHandler(QtGui.QWidget):
 
 
 class guiMathElement(QtGui.QWidget):
-    INITIAL_HEIGHT = 100
+    INITIAL_HEIGHT = 66
     def __init__(self, parent=None):
         super(guiMathElement,self).__init__(parent)
         self.__initChildren()
@@ -217,7 +192,6 @@ class guiMathElement(QtGui.QWidget):
 
 
     def __initChildren(self):
-        self.setMaximumHeight(self.INITIAL_HEIGHT)
         self.text = QtGui.QTextEdit()
         # Magic number comes from added gui elements and text.
         self.text.setFixedHeight(self.INITIAL_HEIGHT)
@@ -227,13 +201,12 @@ class guiMathElement(QtGui.QWidget):
 
         self.goRenderButton = QtGui.QPushButton(">>")
         self.goRenderButton.clicked.connect(self.__slideLeft)
-        self.goRenderButton.setMaximumHeight(self.INITIAL_HEIGHT)
-        self.goRenderButton.setSizePolicy(QtGui.QSizePolicy.Fixed, \
-                                          QtGui.QSizePolicy.Expanding)
+        self.goRenderButton.setFixedHeight(self.INITIAL_HEIGHT)
 
         self.layout = QtGui.QHBoxLayout(self)
         self.layout.addWidget(self.text)
         self.layout.addWidget(self.goRenderButton)
+        self.layout.setAlignment(self.goRenderButton, QtCore.Qt.AlignVCenter)
         self.setLayout(self.layout)
 
     def __initAnimation(self):
@@ -272,6 +245,14 @@ class guiMathElement(QtGui.QWidget):
         self.slideRightAnim.start()
 
     def __textChanged(self):
+        # base resizing of the widget on the changing text.
+        # A sprinkling of magic numbers to keep things nice looking.
+        baseHeight = self.text.document().size().height()
+        if baseHeight >= self.INITIAL_HEIGHT:
+            # Some magic numbers to make things look nice.
+            self.setFixedHeight(baseHeight+10)
+            self.text.setFixedHeight(baseHeight+5)
+            self.goRenderButton.setFixedHeight(baseHeight)
         self.text.ensureCursorVisible()
 
 
