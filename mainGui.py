@@ -214,7 +214,6 @@ class guiMathElement(QtGui.QWidget):
             # Some magic numbers to make things look nice.
             self.setFixedHeight(baseHeight+10)
             self.text.setFixedHeight(baseHeight+5)
-            self.goRenderButton.setFixedHeight(baseHeight)
         self.text.ensureCursorVisible()
 
 
