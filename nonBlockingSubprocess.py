@@ -1,7 +1,9 @@
+#!/usr/bin/python3.3
 import sys
 import subprocess
 import threading
-import Queue
+import queue as Queue
+import time
 
 class nonBlockingSubprocess:
     outputQueue = Queue.Queue()
@@ -27,28 +29,37 @@ class nonBlockingSubprocess:
     # Output of process if buffered, so we kind of need this...
     def getline(self):
         retval = self.outputQueue.get_nowait()
-        if self.outputQueue.empty(): self.queueHasData.clear()
+        if self.outputQueue.empty():
+            self.queueHasData.clear()
         return retval
 
     def hasData(self):
         return self.queueHasData.isSet()
 
     def write(self, input):
-        self.__process.stdin.write(input)
+        self.__process.stdin.write(bytes(input,'utf-8'))
 
-#maxima = nonBlockingSubprocess(["maxima", "-q"])
+    def getProcessEvent(self):
+        return self.queueHasData
 
-## makes things nicer to parse.
-#maxima.process.stdin.write("display2d: false$");
+# this is an automated test of this module.
+def main():
+    maxima = nonBlockingSubprocess(["maxima", "-q"])
 
-# read line without blocking
-#i = 0
-#while i != 5:
-#    try:
-#        line = maxima.getline()
-#    except Queue.Empty:
-#        maxima.process.stdin.write("integrate(sin(x),x);");
-#        time.sleep(0.1)
-#        i += 1
-#    else: # got line
-#        print(line)
+    #makes things nicer to parse.
+    maxima.write("display2d: false$");
+
+    #read line without blocking
+    i = 0
+    while i != 5:
+        try:
+            line = maxima.getline()
+        except Queue.Empty:
+            maxima.write("integrate(sin(x),x);");
+            time.sleep(1)
+            i += 1
+        else: # got line
+            print(line)
+
+if __name__ == '__main__':
+    main()
