@@ -1,5 +1,6 @@
+#!/usr/bin/python3.3
 import sys
-from PySide import *
+from PyQt4 import QtCore, QtGui
 from threading import Timer
 
 # Setup fonts to use (Since this is a high DPI device)
@@ -164,10 +165,13 @@ class ElementHandler(QtGui.QScrollArea):
         self.elementLayout.setAlignment(QtCore.Qt.AlignBottom)
 
         self.appendElement()
+        self.appendElement()
 
     def appendElement(self):
         newElement = guiMathElement(self)
         self.elementLayout.addWidget(newElement)
+        if len(self.elements) != 0:
+            self.elements[-1].finalize()
         self.elements.append(newElement)
 
     def resizeEvent(self,event):
@@ -187,8 +191,6 @@ class guiMathElement(QtGui.QWidget):
     def __init__(self, parent=None):
         super(guiMathElement,self).__init__(parent)
         self.__initChildren()
-        self.__initAnimation()
-
 
 
     def __initChildren(self):
@@ -199,50 +201,10 @@ class guiMathElement(QtGui.QWidget):
         self.text.setSizePolicy(QtGui.QSizePolicy.Expanding, \
                                 QtGui.QSizePolicy.Fixed)
 
-        self.goRenderButton = QtGui.QPushButton(">>")
-        self.goRenderButton.clicked.connect(self.__slideLeft)
-        self.goRenderButton.setFixedHeight(self.INITIAL_HEIGHT)
 
         self.layout = QtGui.QHBoxLayout(self)
         self.layout.addWidget(self.text)
-        self.layout.addWidget(self.goRenderButton)
-        self.layout.setAlignment(self.goRenderButton, QtCore.Qt.AlignVCenter)
         self.setLayout(self.layout)
-
-    def __initAnimation(self):
-        self.slideLeftAnim = QtCore.QPropertyAnimation(self, "geometry")
-        self.slideRightAnim = QtCore.QPropertyAnimation(self, "geometry")
-
-        self.slideLeftAnim.setDuration(250)
-        self.slideRightAnim.setDuration(250)
-
-        self.slideRightAnim.setEasingCurve(QtCore.QEasingCurve.OutQuad)
-
-        self.slideRightAnim.setEasingCurve(QtCore.QEasingCurve.OutQuad)
-
-    def __slideLeft(self):
-        w = self.width()
-        h = self.height()
-
-        x = self.x()
-        y = self.y()
-
-        self.slideLeftAnim.setStartValue(QtCore.QRect(x,y,x+w,y+h))
-        self.slideLeftAnim.setEndValue(QtCore.QRect(x-w,y,x+w,y+h))
-        self.slideLeftAnim.start()
-
-
-    def __slideRight(self):
-        w = self.width()
-        h = self.height()
-
-        x = self.x()
-        y = self.y()
-
-        self.slideRightAnim.setStartValue(QtCore.QRect(x,y,x+w,y+h))
-        self.slideRightAnim.setEndValue(QtCore.QRect(x+w,y,x+w+w,y+h))
-
-        self.slideRightAnim.start()
 
     def __textChanged(self):
         # base resizing of the widget on the changing text.
@@ -258,6 +220,9 @@ class guiMathElement(QtGui.QWidget):
 
     def resizeEvent(self,event):
         super(guiMathElement,self).resizeEvent(event)
+    def finalize(self):
+        self.text.setReadOnly(True)
+
 
 
 def main():
