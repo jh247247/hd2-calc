@@ -2,7 +2,12 @@
 import sys
 import subprocess
 import threading
-import queue as Queue
+# maintain some backwards compat.
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
+
 import time
 import fcntl
 import os
@@ -45,7 +50,6 @@ class nonBlockingSubprocess:
                 output = output.split(b'\n')
                 for i in output:
                     if i is not '':
-                        print(i)
                         queue.put(i)
                 self.queueHasData = True # queue no longer empty...
             time.sleep(SUBPROCESS_POLL_DELAY)
