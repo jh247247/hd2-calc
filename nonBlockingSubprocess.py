@@ -20,7 +20,7 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 
 class nonBlockingSubprocess:
     outputQueue = Queue.Queue()
-    queueHasData = False
+    queueHasData = threading.Event()
     def __init__(self, command):
         # Make process from given command
         self.__process = subprocess.Popen(command,
@@ -51,20 +51,23 @@ class nonBlockingSubprocess:
                 for i in output:
                     if i is not '':
                         queue.put(i)
-                self.queueHasData = True # queue no longer empty...
+                self.queueHasData.set() # queue no longer empty...
             time.sleep(SUBPROCESS_POLL_DELAY)
 
     # Output of process if buffered, so we kind of need this...
-    def getline(self):
+    # This method is optionally blocking, if blocking is not desired,
+    # set timeout to 0 as None means wait forever.
+    def getline(self, timeout=None):
+        self.queueHasData.wait(timeout)
         retval = None
         try:
             retval = self.outputQueue.get_nowait()
         except Queue.Empty:
-            self.queueHasData = False
+            self.queueHasData.clear()
         return retval
 
     def hasData(self):
-        return self.queueHasData
+        return self.queueHasData.isSet()
 
     def write(self, input):
         self.__process.stdin.write(bytearray(input,'utf-8'))
@@ -87,12 +90,11 @@ def main():
     for i in range(0,5):
         maxima.write("integrate(sin(x),x);\n")
 
-    time.sleep(1)
     while True:
         line = maxima.getline()
         if line is not None:
             print(line)
-        if maxima.hasData() is False:
+        if maxima.hasData() == False:
             quit()
 
 if __name__ == '__main__':
