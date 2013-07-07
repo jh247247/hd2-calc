@@ -1,10 +1,9 @@
 import abc
 import nonBlockingSubprocess
-import Queue
+import queue as Queue
 import time
 import threading
 import re
-
 
 class mathElement(object):
     """
@@ -187,7 +186,7 @@ class maximaProcess(mathProcessBase):
         if input == None:
             return None
 
-        input = input.strip(' \n')
+        input = input.strip(b' \n')
         if len(input) == 0:
             return None
 
@@ -222,13 +221,12 @@ class maximaProcess(mathProcessBase):
 
     # testcases...
 def test():
-
     maxima = maximaProcess()
     # maxima.write(b"integrate(cos(x),x,);") # should print an error.
     # maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
 
-    maxima.write(b"diff(f(t),t,2);") # should print an error.
-    maxima.write(b"laplace(%o2,t,s);") # should print an error.
+    maxima.write("diff(f(t),t,2);") # should print an error.
+    maxima.write("laplace(%o2,t,s);") # should print an error.
 
     while len(maxima.getOutput()) < 2:
         pass
