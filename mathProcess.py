@@ -138,7 +138,7 @@ class maximaProcess(mathProcessBase):
         # Type of return, input or output.
         # Might be useful later.
         # Remember, we don't want to keep the input idents, only output.
-        if input[1] == b'i':
+        if chr(input[1]) == 'i':
             # Quit early so we don't keep the input ident.
             return output
 
@@ -225,8 +225,8 @@ def test():
     # maxima.write(b"integrate(cos(x),x,);") # should print an error.
     # maxima.write(b"integrate(sin(x),x);") # should print -cos(x)
 
-    maxima.write("diff(f(t),t,2);") # should print an error.
-    maxima.write("laplace(%o2,t,s);") # should print an error.
+    maxima.write("diff(f(t),t,2);")
+    maxima.write("laplace(%o2,t,s);")
 
     while len(maxima.getOutput()) < 2:
         pass
