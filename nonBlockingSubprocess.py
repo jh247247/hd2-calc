@@ -43,8 +43,6 @@ class nonBlockingSubprocess:
     # Helper function for the thread
     # reads the output of the process and pushes it onto the queue.
     def __enqueue_output(self, out, queue):
-        # while(True):
-        #     print(out.read())
         for output in iter(out.read, b''):
             if output is not None:
                 output = output.split(b'\n')

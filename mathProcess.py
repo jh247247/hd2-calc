@@ -72,7 +72,6 @@ class mathProcessBase(object):
                 process.queueHasData.wait()
             except ValueError as inst:
                 print("Error: " + str(inst))
-                pass
             else:
                 if clean != None:
                     self.cleanOutput.append(clean)
@@ -120,29 +119,30 @@ class maximaProcess(mathProcessBase):
         if self.inProgress.label != None and self.inProgress.type != None:
             # Search for a closing bracket, if we find one, return substring
             # after bracket.
-            i = 0
-            while i < len(input):
-                if input[i] == ')':
-                    return input[i+1:].strip(' \n')
-                i += 1
+            for i in range(len(input)):
+                if chr(input[i]) == ')':
+                    return input[i+1:].strip(b' \n')
 
             # No closing bracket found...
             return input
 
         # Split string into two parts, the one we are interested in,
         # The other bits that we dont care about right now.
-        i = 0
-        while i < len(input):
-            if input[i] == ')':
-                output = input[i+1:].strip(' \n')
+        for i in range(len(input)):
+            if chr(input[i]) == ')':
+                output = input[i+1:].strip(b' \n')
                 input = input[1:i]
                 break
-            i += 1
 
         # Strip the input of what parts we want to keep.
         # Type of return, input or output.
         # Might be useful later.
-        self.inProgress.type = input[1]
+        # Remember, we don't want to keep the input idents, only output.
+        if input[1] == b'i':
+            # Quit early so we don't keep the input ident.
+            return output
+
+        self.inProgress.type = chr(input[1])
 
         # Convert the rest of the string to an integer, because that's what it
         # is. Makes things easier later on.
@@ -191,14 +191,14 @@ class maximaProcess(mathProcessBase):
             return None
 
         # parse identifier
-        if input[0] == '(':
+        if chr(input[0]) == '(':
             input = self.__identParse(input)
             if len(input) == 0:
                 return None
 
         # Check for tex input.
 
-        if input[0] == '$' or self.texMode == True:
+        if chr(input[0]) == '$' or self.texMode == True:
             self.__texParse(input)
             return None
 
