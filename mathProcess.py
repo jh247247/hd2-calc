@@ -112,6 +112,11 @@ class maximaProcess(mathProcessBase):
 
 
     def __identParse(self, input):
+        """
+        Parse the identifier for the current mathElement.
+        If we already have a identifier, discard whatever the ident for the given
+        string and return the rest.
+        """
         if input == None:
             return None
 
@@ -119,8 +124,8 @@ class maximaProcess(mathProcessBase):
         if self.inProgress.label != None and self.inProgress.type != None:
             # Search for a closing bracket, if we find one, return substring
             # after bracket.
-            for i in range(len(input)):
-                if chr(input[i]) == ')':
+            for i, c in enumerate(input):
+                if chr(c) == ')':
                     return input[i+1:].strip(b' \n')
 
             # No closing bracket found...
@@ -128,8 +133,8 @@ class maximaProcess(mathProcessBase):
 
         # Split string into two parts, the one we are interested in,
         # The other bits that we dont care about right now.
-        for i in range(len(input)):
-            if chr(input[i]) == ')':
+        for i, c in enumerate(input):
+            if chr(c) == ')':
                 output = input[i+1:].strip(b' \n')
                 input = input[1:i]
                 break
