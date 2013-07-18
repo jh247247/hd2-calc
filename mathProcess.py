@@ -1,9 +1,15 @@
+#!/usr/bin/python
 import abc
 import nonBlockingSubprocess
-import queue as Queue
 import time
 import threading
 import re
+
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
+
 
 class mathElement(object):
     """

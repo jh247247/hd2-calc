@@ -1,4 +1,4 @@
-#!/usr/bin/python3.3
+#!/usr/bin/python
 import sys
 from PyQt4 import QtCore, QtGui
 from threading import Timer
@@ -209,7 +209,6 @@ class guiMathElement(QtGui.QWidget):
         """
         super(guiMathElement,self).__init__(parent)
         self.__initChildren()
-        self.finalize()
 
     def __initChildren(self):
         """
