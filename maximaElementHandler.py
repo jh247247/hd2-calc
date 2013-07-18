@@ -19,4 +19,9 @@ class MaximaElementHandler(ElementHandler):
 
     def appendElement(self):
         super(MaximaElementHandler, self).appendElement()
-        self.maxima.write(self.elements[-1].text.toPlainText())
+        if len(self.elements) > 1:
+            self.maxima.write(self.elements[-2].text.toPlainText())
+            output = self.maxima.getOutput()
+            if output is not None:
+                for i in output:
+                    print(str(i))

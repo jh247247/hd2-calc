@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.3
 import sys
 from PyQt4 import QtCore, QtGui
 from threading import Timer

@@ -47,7 +47,8 @@ class ElementHandler(QtGui.QWidget):
 
         self.resize(event.size())
         for i in self.elements:
-            i.setFixedWidth(self.width()-settings.SCROLLBAR_WIDTH)
+            # TODO: FIX MAGIC NUMBER HERE
+            i.setFixedWidth(self.width()-18)
 
         # Have to do this to redraw the layout.
         self.elementLayout.activate()

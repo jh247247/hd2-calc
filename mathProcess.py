@@ -123,6 +123,7 @@ class maximaProcess(mathProcessBase):
         If we already have a identifier, discard whatever the ident for the given
         string and return the rest.
         """
+
         if input == None:
             return None
 
@@ -140,7 +141,7 @@ class maximaProcess(mathProcessBase):
         # Split string into two parts, the one we are interested in,
         # The other bits that we dont care about right now.
         for i, c in enumerate(input):
-            if c == ')':
+            if chr(c) == ')':
                 output = input[i+1:].strip(b' \n')
                 input = input[1:i]
                 break
@@ -149,7 +150,7 @@ class maximaProcess(mathProcessBase):
         # Type of return, input or output.
         # Might be useful later.
         # Remember, we don't want to keep the input idents, only output.
-        if input[1] == 'i':
+        if chr(input[1]) == 'i':
             # Quit early so we don't keep the input ident.
             return output
 
@@ -189,8 +190,6 @@ class maximaProcess(mathProcessBase):
         If it isn't pass it onto another function for it to handle.
         """
 
-        print(input)
-
         if self.texMode == False and self.inProgress.defined():
             tempElement = self.inProgress
             self.inProgress = mathElement()
@@ -204,19 +203,22 @@ class maximaProcess(mathProcessBase):
             return None
 
         # parse identifier
-        if input[0] == '(':
+        if chr(input[0]) == '(':
             input = self.__identParse(input)
             if len(input) == 0:
                 return None
 
         # Check for tex input.
 
-        if input[0] == '$' or self.texMode == True:
+        if chr(input[0]) == '$' or self.texMode == True:
             self.__texParse(input)
             return None
 
         if self.inProgress.data == None:
-            self.inProgress.data = input
+            if input[0:5] == b'false':
+                self.inProgress.data = input[5:]
+            else:
+                self.inProgress.data = input
         else:
             self.inProgress.data += input
 

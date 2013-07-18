@@ -46,7 +46,6 @@ class nonBlockingSubprocess:
             try:
                 for output in iter(out.readline, b''):
                     if output is not None:
-                        print(str(output))
                         output = output.split(b'\n')
                         for i in output:
                             if i is not '':
@@ -75,6 +74,7 @@ class nonBlockingSubprocess:
         return self.queueHasData.isSet()
 
     def write(self, input):
+        print(bytearray(input,'utf-8'))
         self.__process.stdin.write(bytearray(input,'utf-8'))
         self.__process.stdin.flush()
 
