@@ -44,8 +44,9 @@ class nonBlockingSubprocess:
     def __enqueue_output(self, out, queue):
         while(True):
             try:
-                for output in iter(out.read, b''):
+                for output in iter(out.readline, b''):
                     if output is not None:
+                        print(str(output))
                         output = output.split(b'\n')
                         for i in output:
                             if i is not '':
