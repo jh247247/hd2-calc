@@ -74,7 +74,6 @@ class nonBlockingSubprocess:
         return self.queueHasData.isSet()
 
     def write(self, input):
-        print(bytearray(input,'utf-8'))
         self.__process.stdin.write(bytearray(input,'utf-8'))
         self.__process.stdin.flush()
 
