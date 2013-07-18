@@ -26,12 +26,16 @@ class ElementHandler(QtGui.QWidget):
         """
         Appends a new element and finalizes the previous one.
         """
-        newElement = guiMathElement(self)
+        newElement = GuiMathElement(self)
+
         self.elementLayout.addWidget(newElement)
-        # Finalize the previous element so wierd stuff doesn't happen.
+        # Finalize the previous element so weird stuff doesn't happen.
         if len(self.elements) != 0:
             self.elements[-1].finalize()
         self.elements.append(newElement)
+
+        self.connect(self.elements[-1], QtCore.SIGNAL("final"), self.appendElement)
+
 
     def resizeEvent(self,event):
         """
@@ -50,14 +54,17 @@ class ElementHandler(QtGui.QWidget):
 
 
 
-class guiMathElement(QtGui.QWidget):
+class GuiMathElement(QtGui.QWidget):
     # This should be about 1-2 lines for our text size.
     INITIAL_HEIGHT = 66
+    text = None
+    sendButton = None
+    layout = None
     def __init__(self, parent=None):
         """
         Init stuff to be used in this gui element.
         """
-        super(guiMathElement,self).__init__(parent)
+        super(GuiMathElement,self).__init__(parent)
         self.__initChildren()
 
     def __initChildren(self):
@@ -75,9 +82,13 @@ class guiMathElement(QtGui.QWidget):
         self.text.setSizePolicy(QtGui.QSizePolicy.Expanding, \
                                 QtGui.QSizePolicy.Fixed)
 
+        self.sendButton = QtGui.QPushButton('&Send',self)
+        self.sendButton.clicked.connect(self.sendClicked)
 
         self.layout = QtGui.QHBoxLayout(self)
         self.layout.addWidget(self.text)
+        self.layout.addWidget(self.sendButton)
+
         self.setLayout(self.layout)
 
     def __textChanged(self):
@@ -104,3 +115,7 @@ class guiMathElement(QtGui.QWidget):
         """
         self.text.setReadOnly(True)
         self.text.setEnabled(False)
+        self.sendButton.setEnabled(False)
+
+    def sendClicked(self):
+        self.emit(QtCore.SIGNAL("final"))

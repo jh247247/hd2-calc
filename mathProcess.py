@@ -140,7 +140,7 @@ class maximaProcess(mathProcessBase):
         # Split string into two parts, the one we are interested in,
         # The other bits that we dont care about right now.
         for i, c in enumerate(input):
-            if chr(c) == ')':
+            if c == ')':
                 output = input[i+1:].strip(b' \n')
                 input = input[1:i]
                 break
@@ -149,7 +149,7 @@ class maximaProcess(mathProcessBase):
         # Type of return, input or output.
         # Might be useful later.
         # Remember, we don't want to keep the input idents, only output.
-        if chr(input[1]) == 'i':
+        if input[1] == 'i':
             # Quit early so we don't keep the input ident.
             return output
 
@@ -189,6 +189,8 @@ class maximaProcess(mathProcessBase):
         If it isn't pass it onto another function for it to handle.
         """
 
+        print(input)
+
         if self.texMode == False and self.inProgress.defined():
             tempElement = self.inProgress
             self.inProgress = mathElement()
@@ -202,14 +204,14 @@ class maximaProcess(mathProcessBase):
             return None
 
         # parse identifier
-        if chr(input[0]) == '(':
+        if input[0] == '(':
             input = self.__identParse(input)
             if len(input) == 0:
                 return None
 
         # Check for tex input.
 
-        if chr(input[0]) == '$' or self.texMode == True:
+        if input[0] == '$' or self.texMode == True:
             self.__texParse(input)
             return None
 
@@ -229,8 +231,8 @@ class maximaProcess(mathProcessBase):
 
     def getOutput(self):
         # when we return, cleanOutput should be empty.
-        retVal = cleanOutput
-        cleanOutput = []
+        retVal = self.cleanOutput
+        self.cleanOutput = []
         return retVal
 
     # testcases...
@@ -242,9 +244,7 @@ def test():
     maxima.write("diff(f(t),t,2);")
     maxima.write("laplace(%o2,t,s);")
 
-    while(len(maxima.cleanOutput) < 2):
-        pass
-
+    time.sleep(1)
 
     # we want to have many test cases later on.
     # there really should be a better way to do this though.

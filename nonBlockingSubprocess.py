@@ -42,14 +42,21 @@ class nonBlockingSubprocess:
     # Helper function for the thread
     # reads the output of the process and pushes it onto the queue.
     def __enqueue_output(self, out, queue):
-        for output in iter(out.read, b''):
-            if output is not None:
-                output = output.split(b'\n')
-                for i in output:
-                    if i is not '':
-                        queue.put(i)
-                self.queueHasData.set() # queue no longer empty...
-            time.sleep(SUBPROCESS_POLL_DELAY)
+        while(True):
+            try:
+                for output in iter(out.read, b''):
+                    if output is not None:
+                        output = output.split(b'\n')
+                        for i in output:
+                            if i is not '':
+                                queue.put(i)
+                                # queue no longer empty...
+                                self.queueHasData.set()
+                time.sleep(SUBPROCESS_POLL_DELAY)
+            except IOError:
+                # there is nothing to read right now (python 2.7 error)
+                time.sleep(SUBPROCESS_POLL_DELAY)
+
 
     # Output of process if buffered, so we kind of need this...
     # This method is optionally blocking, if blocking is not desired,
@@ -76,7 +83,7 @@ class nonBlockingSubprocess:
 # this is an automated test of this module.
 def main():
 
-    maxima = nonBlockingSubprocess(["maxima", "-q"])
+    maxima = nonBlockingSubprocess(["ls"])
 
     #makes things nicer to parse.
     maxima.write("display2d: false$\n")
