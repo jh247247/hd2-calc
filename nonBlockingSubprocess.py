@@ -26,8 +26,7 @@ class nonBlockingSubprocess:
         self.__process = subprocess.Popen(command,
                                           stdout=subprocess.PIPE,
                                           stdin=subprocess.PIPE,
-                                          bufsize=1,
-                                          close_fds=ON_POSIX)
+                                          bufsize=1)
 
         fcntl.fcntl(self.__process.stdout.fileno(),
                     fcntl.F_SETFL,

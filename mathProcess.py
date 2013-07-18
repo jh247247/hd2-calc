@@ -228,7 +228,10 @@ class maximaProcess(mathProcessBase):
         self.__process.write('tex(%);\n')
 
     def getOutput(self):
-        return self.cleanOutput
+        # when we return, cleanOutput should be empty.
+        retVal = cleanOutput
+        cleanOutput = []
+        return retVal
 
     # testcases...
 def test():
@@ -239,7 +242,7 @@ def test():
     maxima.write("diff(f(t),t,2);")
     maxima.write("laplace(%o2,t,s);")
 
-    while len(maxima.getOutput()) < 2:
+    while(len(maxima.cleanOutput) < 2):
         pass
 
 

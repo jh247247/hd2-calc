@@ -4,6 +4,7 @@ from PyQt4 import QtCore, QtGui
 from threading import Timer
 from elementHandler import ElementHandler
 import settings
+import maximaElementHandler
 
 class mainWindow(QtGui.QMainWindow):
     """
@@ -19,7 +20,7 @@ class mainWindow(QtGui.QMainWindow):
         self.__initStatus()
         self.__initWindow()
 
-        self.elements = ElementHandler(self)
+        self.elements = None
 
         self.scroll = QtGui.QScrollArea(self)
         # We want things to always show, makes size calculations easier.
@@ -64,6 +65,10 @@ class mainWindow(QtGui.QMainWindow):
 
     def getStatusObject(self):
         return self.statusBar
+
+    def setElementHandler(self, handler):
+        self.elements = handler
+        self.scroll.setWidget(self.elements)
 
 
 class StatusHandler:
@@ -154,6 +159,8 @@ def main():
     app = QtGui.QApplication(sys.argv)
     app.setFont(settings.FONT_GENERAL)
     main = mainWindow()
+    elements = maximaElementHandler.MaximaElementHandler()
+    main.setElementHandler(elements)
     main.getStatusObject().setTempMessage('Hello1!');
     main.getStatusObject().setTempMessage('Hello2!');
     sys.exit(app.exec_())
