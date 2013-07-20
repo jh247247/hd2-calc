@@ -22,7 +22,10 @@ class MaximaElementHandler(ElementHandler):
         super(MaximaElementHandler, self).appendElement()
         if len(self.elements) > 1:
             input = self.elements[-2].text.toPlainText()
-            input += ';'
+            # make sure input is terminated by something.
+            if input.endswith(';') == False and\
+               input.endswith('$') == False:
+                input += ';'
             self.maxima.write(input)
             output = self.maxima.getOutput()
             # length of output should be 1. If not something weird is going on.

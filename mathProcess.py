@@ -175,11 +175,12 @@ class maximaProcess(mathProcessBase):
             self.inProgress.texOutput = ''
 
         # Check for tex identifiers. Set texMode to appropriate value.
-        if input[0] == '$' and input[-1] == '$':
+        if chr(input[0]) == '$' and chr(input[-1]) == '$' \
+           and len(input) is not 2:
             pass
-        elif input[0] == '$':
+        elif chr(input[0]) == '$':
             self.texMode = True
-        elif input[-1] == '$':
+        elif chr(input[-1]) == '$':
             self.texMode = False
 
         # Append input string to end of texOutput.
@@ -198,6 +199,7 @@ class maximaProcess(mathProcessBase):
         """
 
         if self.texMode == False and self.inProgress.defined():
+            print(self.inProgress)
             tempElement = self.inProgress
             self.inProgress = mathElement()
             self.hasOutput.set()
@@ -218,7 +220,7 @@ class maximaProcess(mathProcessBase):
 
         # Check for tex input.
 
-        if chr(input[0]) == '$' or self.texMode == True:
+        if input[0:2] == b'$$' or self.texMode == True:
             self.__texParse(input)
             return None
 

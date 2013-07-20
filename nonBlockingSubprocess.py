@@ -48,7 +48,7 @@ class nonBlockingSubprocess:
                     if output is not None:
                         output = output.split(b'\n')
                         for i in output:
-                            if i is not '':
+                            if len(i) != 0:
                                 queue.put(i)
                                 # queue no longer empty...
                                 self.queueHasData.set()
