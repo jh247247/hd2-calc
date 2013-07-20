@@ -9,6 +9,7 @@ import mathProcess
 
 class MaximaElementHandler(ElementHandler):
     maxima = mathProcess.maximaProcess()
+
     def __init__(self, parent=None):
         """
         Creates a list for storing the individual gui elements
@@ -20,8 +21,13 @@ class MaximaElementHandler(ElementHandler):
     def appendElement(self):
         super(MaximaElementHandler, self).appendElement()
         if len(self.elements) > 1:
-            self.maxima.write(self.elements[-2].text.toPlainText())
+            input = self.elements[-2].text.toPlainText()
+            input += ';'
+            self.maxima.write(input)
             output = self.maxima.getOutput()
-            if output is not None:
-                for i in output:
-                    print(str(i))
+            # length of output should be 1. If not something weird is going on.
+            # even then, we can't do anything about it.
+            if len(output) > 1:
+                print("Error: Length of output is greater than expected!")
+            self.elements[-2].data = output[0]
+            self.elements[-2].text.setText(output[0].data.decode("utf-8"))

@@ -48,8 +48,8 @@ class mathElement(object):
                 "Data: " + str(self.data) + "\n" +
                 "Tex: " + str(self.texOutput) + "\n")
 
-
 class mathProcessBase(object):
+
     """
     Template for almost any type of math process that I am willing to target.
     """
@@ -88,21 +88,28 @@ class maximaProcess(mathProcessBase):
     Needs some work, such as multiline responses and some error messages.
     """
 
+    __process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
+
+    hasOutput = threading.Event()
+
+    cleanOutput = []
+
+
 
     def __init__(self):
         """
         Start up the maxima subProcess using nonBlockingSubprocess.
         Set some sane defaults so it wil be easy to parse later on.
         """
-        self.__process = nonBlockingSubprocess.nonBlockingSubprocess(["maxima","-q"])
 
-        self.cleanOutput = []
 
         # make things easier to parse.
         self.__process.write("display2d: false$")
+
         self.thread = threading.Thread(target=self.clean_output,
-                                       args=(self.__process,
-                                             self.cleanOutput))
+                                  args=(self.__process,
+                                        self.cleanOutput))
+
         self.thread.daemon = True # thread dies with the program
         self.thread.start()
 
@@ -193,6 +200,7 @@ class maximaProcess(mathProcessBase):
         if self.texMode == False and self.inProgress.defined():
             tempElement = self.inProgress
             self.inProgress = mathElement()
+            self.hasOutput.set()
             return tempElement
 
         if input == None:
@@ -231,10 +239,13 @@ class maximaProcess(mathProcessBase):
         # We also want the tex output.
         self.__process.write('tex(%);\n')
 
+        # NOTE: this is a blocking method. It WILL wait for output.
     def getOutput(self):
         # when we return, cleanOutput should be empty.
+        self.hasOutput.wait()
         retVal = self.cleanOutput
         self.cleanOutput = []
+        self.hasOutput.clear()
         return retVal
 
     # testcases...
