@@ -115,7 +115,6 @@ class GuiMathElement(QtGui.QWidget):
         Also greys out the box so that text cannot be edited.
         """
         self.text.setReadOnly(True)
-        self.text.setEnabled(False)
         self.sendButton.setEnabled(False)
 
     def sendClicked(self):
