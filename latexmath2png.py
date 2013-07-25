@@ -50,18 +50,18 @@ import getopt
 
 # Default packages to use when generating output
 default_packages = [
-        b'amsmath',
-        b'amsthm',
-        b'amssymb',
-        b'bm'
+        'amsmath',
+        'amsthm',
+        'amssymb',
+        'bm'
         ]
 
 def __build_preamble(packages):
-    preamble = b'\documentclass{article}\n'
+    preamble = '\documentclass{article}\n'
     for p in packages:
-        preamble += b"\usepackage{%s}\n" % p
-    preamble += b"\pagestyle{empty}\n\\begin{document}\n"
-    return preamble.decode('utf-8')
+        preamble += "\\usepackage{%s}\n" % p
+    preamble += "\pagestyle{empty}\n\\begin{document}\n"
+    return preamble
 
 def __write_output(infile, outdir, workdir = '.', prefix = '', size = 1):
     try:

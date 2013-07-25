@@ -5,6 +5,7 @@ from PyQt4 import QtCore, QtGui
 from threading import Timer
 import settings
 
+
 class ElementHandler(QtGui.QWidget):
     def __init__(self, parent=None):
         """
@@ -57,7 +58,7 @@ class ElementHandler(QtGui.QWidget):
 
 class GuiMathElement(QtGui.QWidget):
     # This should be about 1-2 lines for our text size.
-    INITIAL_HEIGHT = 66
+    INITIAL_HEIGHT = 37
     text = None
     sendButton = None
     layout = None
@@ -98,13 +99,13 @@ class GuiMathElement(QtGui.QWidget):
         textbox. It resizes the textbox and the containing widget to make sure there are no
         scroll bars as they are terrible on a touchscreen.
         """
+
         # base resizing of the widget on the changing text.
         # A sprinkling of magic numbers to keep things nice looking.
         baseHeight = self.text.document().size().height()
-        if baseHeight >= self.INITIAL_HEIGHT:
-            # Some magic numbers to make things look nice.
-            self.setFixedHeight(baseHeight+10)
+        if baseHeight >= self.INITIAL_HEIGHT-5:
             self.text.setFixedHeight(baseHeight+5)
+            self.sendButton.setFixedHeight(baseHeight+5)
         self.text.ensureCursorVisible()
 
 
