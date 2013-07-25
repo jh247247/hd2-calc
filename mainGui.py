@@ -159,7 +159,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
     app.setFont(settings.FONT_GENERAL)
     main = mainWindow()
-    elements = maximaElementHandler.MaximaElementHandler()
+    elements = maximaElementHandler.MaximaElementHandler(main.getStatusObject())
     main.setElementHandler(elements)
     main.getStatusObject().setTempMessage('Hello1!');
     main.getStatusObject().setTempMessage('Hello2!');

@@ -7,7 +7,7 @@ import settings
 
 
 class ElementHandler(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, statusHandler=None):
         """
         Creates a list for storing the individual gui elements
         Might need restructuring later down the line for the math stuff,
@@ -87,11 +87,11 @@ class GuiMathElement(QtGui.QWidget):
         self.sendButton = QtGui.QPushButton('&Send',self)
         self.sendButton.clicked.connect(self.sendClicked)
 
-        self.layout = QtGui.QHBoxLayout(self)
-        self.layout.addWidget(self.text)
-        self.layout.addWidget(self.sendButton)
+        self.hLayout = QtGui.QHBoxLayout(self)
+        self.hLayout.addWidget(self.text)
+        self.hLayout.addWidget(self.sendButton)
 
-        self.setLayout(self.layout)
+        self.setLayout(self.hLayout)
 
     def __textChanged(self):
         """
