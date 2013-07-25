@@ -119,4 +119,5 @@ class GuiMathElement(QtGui.QWidget):
         self.sendButton.setEnabled(False)
 
     def sendClicked(self):
-        self.emit(QtCore.SIGNAL("final"))
+        if len(self.text.toPlainText()) > 0:
+            self.emit(QtCore.SIGNAL("final"))
