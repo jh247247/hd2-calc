@@ -4,6 +4,7 @@ import nonBlockingSubprocess
 import time
 import threading
 import re
+import uuid
 
 try:
     import Queue
@@ -15,25 +16,19 @@ class mathElement(object):
     """
     Holder for the data returned by any type of math process.
     """
-    def __init__(self, data=None, label=None, type=None, texOutput=None):
+    # generate uuid for saving later.
+    uuid = uuid.uuid1()
+    def __init__(self, data=None, texOutput=None):
         """
         Constructor for each math element.
         :param data: Compulsory. What data was returned my the math process.
-        :param label: Optional. What label number this data has. What line
-                      of outpout the REPL says it is.
-        :param type: Optional. What type of data this contains; input, output or
-                     something else.
         :param texOutput: Tex representaion of data for rendering later.
         """
         self.data = data
-        self.label = label
-        self.type = type
         self.texOutput = texOutput
 
     def defined(self):
         if (self.data != None and
-            self.label != None and
-            self.type != None and
             self.texOutput != None):
             return True
         else:
@@ -43,8 +38,7 @@ class mathElement(object):
         """
         Return a string in the same format as was given by
         """
-        return ("Type: " + str(self.type) + "\n"
-                "Label: " +str(self.label) + "\n" +
+        return ("UUID: " + str(self.uuid) + "\n"
                 "Data: " + str(self.data) + "\n" +
                 "Tex: " + str(self.texOutput) + "\n")
 
@@ -134,40 +128,15 @@ class maximaProcess(mathProcessBase):
         if input == None:
             return None
 
-        # Oh wow, the data we are searching for has already been input.
-        if self.inProgress.label != None and self.inProgress.type != None:
-            # Search for a closing bracket, if we find one, return substring
-            # after bracket.
-            for i, c in enumerate(input):
-                if chr(c) == ')':
-                    return input[i+1:].strip(b' \n')
-
-            # No closing bracket found...
-            return input
-
-        # Split string into two parts, the one we are interested in,
-        # The other bits that we dont care about right now.
+        # Search for a closing bracket, if we find one, return substring
+        # after bracket.
         for i, c in enumerate(input):
             if chr(c) == ')':
-                output = input[i+1:].strip(b' \n')
-                input = input[1:i]
-                break
+                return input[i+1:].strip(b' \n')
 
-        # Strip the input of what parts we want to keep.
-        # Type of return, input or output.
-        # Might be useful later.
-        # Remember, we don't want to keep the input idents, only output.
-        if chr(input[1]) == 'i':
-            # Quit early so we don't keep the input ident.
-            return output
+            # No closing bracket found...
+        return input
 
-        self.inProgress.type = chr(input[1])
-
-        # Convert the rest of the string to an integer, because that's what it
-        # is. Makes things easier later on.
-        self.inProgress.label = int(input[2:])
-
-        return output
     def __texParse(self, input):
         # If input is a known error, tex output is nothing.
         if input in self.__errorTex:
