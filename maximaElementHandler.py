@@ -46,7 +46,7 @@ class MaximaElementHandler(ElementHandler):
                 print("Error: Length of output is greater than expected!")
             self.elements[-2].data = output[0]
             # set the textbox contents to what we receive.
-            self.elements[-2].text.setText(output[0].data.decode("utf-8"))
+            #self.elements[-2].text.setText(output[0].data.decode("utf-8"))
 
             self.saveElement(self.elements[-2])
 
