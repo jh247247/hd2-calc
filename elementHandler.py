@@ -4,6 +4,7 @@ import sys
 from PyQt4 import QtCore, QtGui
 from threading import Timer
 import settings
+import os
 
 
 class ElementHandler(QtGui.QWidget):
@@ -87,11 +88,14 @@ class GuiMathElement(QtGui.QWidget):
         self.sendButton = QtGui.QPushButton('&Send',self)
         self.sendButton.clicked.connect(self.sendClicked)
 
-        self.hLayout = QtGui.QHBoxLayout(self)
+        self.vLayout = QtGui.QVBoxLayout(self)
+
+        self.hLayout = QtGui.QHBoxLayout()
         self.hLayout.addWidget(self.text)
         self.hLayout.addWidget(self.sendButton)
 
-        self.setLayout(self.hLayout)
+        self.vLayout.addLayout(self.hLayout)
+        self.setLayout(self.vLayout)
 
     def __textChanged(self):
         """
@@ -121,3 +125,17 @@ class GuiMathElement(QtGui.QWidget):
     def sendClicked(self):
         if len(self.text.toPlainText()) > 0:
             self.emit(QtCore.SIGNAL("final"))
+
+    def loadImage(self, imagePath):
+        # load the image from the path given (has to point to a file.)
+        if os.path.exists(imagePath) is not True:
+            # nothing loaded!
+            return False
+
+        # load image from path given.
+        print(imagePath)
+        self.tex = QtGui.QLabel(self)
+        self.tex.setPixmap(QtGui.QPixmap(imagePath))
+        print(self.tex)
+
+        self.vLayout.insertWidget(0,self.tex)
